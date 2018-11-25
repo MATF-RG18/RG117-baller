@@ -1,8 +1,12 @@
 #include <stdlib.h>
 #include <GL/glut.h>
 #include <math.h>
-#define pi 3.141592653589793
+#include<stdbool.h>
 
+#define pi 3.141592653589793
+double jump = 0;
+
+bool ball_jump= false;
 
 /* Deklaracije callback funkcija. */
 static void on_keyboard(unsigned char key, int x, int y);
@@ -24,6 +28,7 @@ int main(int argc, char **argv)
     glutKeyboardFunc(on_keyboard);
     glutReshapeFunc(on_reshape);
     glutDisplayFunc(on_display);
+	glutIdleFunc(on_display);
 
     /* Obavlja se OpenGL inicijalizacija. */
     glClearColor(0.75, 0.75, 0.75, 0);
@@ -34,16 +39,38 @@ int main(int argc, char **argv)
     return 0;
 }
 
+void ball_jump_f(int value){
+	if (value != 5) return;
+
+	jump += 9; 
+
+	glutPostRedisplay();
+
+	if ((ball_jump) && (jump <= 180))
+		glutTimerFunc(50, ball_jump_f, 5);
+	else {
+		jump = 0;
+		ball_jump = false;
+	}
+
+}
 static void on_keyboard(unsigned char key, int x, int y)
 {
+	(void)x;
+	(void)y;
     switch (key) {
     case 27:
         /* Zavrsava se program. */
         exit(0);
         break;
+	case 32:
+		if (!ball_jump)
+			ball_jump = true;
+			glutTimerFunc(50, ball_jump_f, 5);
+		break;
     }
+		
 }
-
 static void on_reshape(int width, int height)
 {
 	/* pamtimo sirinu i visinu prozora */
@@ -52,8 +79,13 @@ static void on_reshape(int width, int height)
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(60, (float)width/height, 1, 10);
+	gluPerspective(60, (float)width/height, 1, 1000);
 
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(0.7,0.3,1,
+			  0.7,0.3,0,
+			  0,1,0);
 }
 
 static void on_display(void)
@@ -127,43 +159,30 @@ static void on_display(void)
 
 
 	/* Crtamo podlogu */
+
 	glColor3f(0, 0, 1);
 	glBegin(GL_POLYGON);
-		glVertex3f(-10, 0, -0.2);
-		glNormal3f(0,1,0);
-		glVertex3f(-10, 0,  0.2);
-		glNormal3f(0,1,0);
-		glVertex3f( 10, 0,  0.2);
-		glNormal3f(0,1,0);
-		glVertex3f( 10, 0, -0.2);
-		glNormal3f(0,1,0);
+//		glNormal3f(0,1,0);
+		glVertex3f(-10,-0.05, -0.2);
+		glVertex3f(-10,-0.05,  0.2);
+		glVertex3f( 10,-0.05,  0.2);
+		glVertex3f( 10,-0.05, -0.2);
 	glEnd();
 	
+	/* crtanje prednje ivice podloge*/
 	glBegin(GL_POLYGON);
-		glVertex3f(-100,   0, -0.2 );
-		glVertex3f(-100, -50, -0.2 );
-		glVertex3f( 100, -50, -0.2 );
-		glVertex3f( 100,   0, -0.2 );
-	glEnd();
-	
-	glBegin(GL_POLYGON);
-		glVertex3f(-100,   0, 0.2 );
-		glVertex3f(-100, -50, 0.2 );
-		glVertex3f( 100, -50, 0.2 );
-		glVertex3f( 100,   0, 0.2 );
-	glEnd();
-
-	glBegin(GL_POLYGON);
-		glVertex3f(-100,   0, 0.2 );
-		glVertex3f(-100, -50, 0.2 );
-		glVertex3f(-100, -50,-0.2 );
-		glVertex3f(-100,   0,-0.2 );
+		glVertex3f(-100, -0.05, -0.2 );
+		glVertex3f(-100, -50  , -0.2 );
+		glVertex3f( 100, -50  , -0.2 );
+		glVertex3f( 100, -0.05, -0.2 );
 	glEnd();
 	
 
+	glPushMatrix();
 	/* crtamo sferu */
-	glTranslatef(0, 0.05, 0);
+	glTranslatef(0, sin(jump*pi / 180)*0.5, 0);
     glColor3f(1, 0, 0);
+
 	
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_coeffs_1);  
 	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_coeffs_1);  
@@ -171,8 +190,10 @@ static void on_display(void)
 	glMaterialf( GL_FRONT_AND_BACK, GL_SHININESS, shininess);      
 
     glutSolidSphere(0.05, 100,100);
-
-
-    /* Nova slika se salje na ekran. */
+	
+	glPopMatrix();
+    
+	
+	/* Nova slika se salje na ekran. */
     glutSwapBuffers();
 }
