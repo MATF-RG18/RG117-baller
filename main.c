@@ -5,14 +5,20 @@
 
 #define pi 3.141592653589793
 double jump = 0;
+double move = 0;
 
 bool ball_jump= false;
+
+
+
 
 /* Deklaracije callback funkcija. */
 static void on_keyboard(unsigned char key, int x, int y);
 static void on_reshape(int width, int height);
 static void on_display(void);
-
+void specialInput(int key, int x, int y);
+void ball_jump_f(int value);
+void specialInput(int key, int x, int y);
 int main(int argc, char **argv)
 {
     /* Inicijalizuje se GLUT. */
@@ -30,6 +36,11 @@ int main(int argc, char **argv)
     glutDisplayFunc(on_display);
 	glutIdleFunc(on_display);
 
+	/* funkcija koja dozvoljava hvatanje specijalnih tastera
+	 * tastature, kao sto su strelice */
+	glutSpecialFunc(specialInput);
+
+
     /* Obavlja se OpenGL inicijalizacija. */
     glClearColor(0.75, 0.75, 0.75, 0);
 
@@ -39,21 +50,7 @@ int main(int argc, char **argv)
     return 0;
 }
 
-void ball_jump_f(int value){
-	if (value != 5) return;
 
-	jump += 9; 
-
-	glutPostRedisplay();
-
-	if ((ball_jump) && (jump <= 180))
-		glutTimerFunc(50, ball_jump_f, 5);
-	else {
-		jump = 0;
-		ball_jump = false;
-	}
-
-}
 static void on_keyboard(unsigned char key, int x, int y)
 {
 	(void)x;
@@ -65,12 +62,46 @@ static void on_keyboard(unsigned char key, int x, int y)
         break;
 	case 32:
 		if (!ball_jump)
+			glutTimerFunc(30, ball_jump_f, 5);
 			ball_jump = true;
-			glutTimerFunc(50, ball_jump_f, 5);
 		break;
     }
 		
 }
+void ball_jump_f(int value){
+	if (value != 5) return;
+
+	jump += 7; 
+
+	glutPostRedisplay();
+
+	if ((ball_jump) && (jump <= 180))
+		glutTimerFunc(30, ball_jump_f, 5);
+	else {
+		jump = 0;
+		ball_jump = false;
+	}
+
+}
+
+void specialInput(int key, int x, int y){
+
+    switch (key) {
+	/* kretanje udesno */
+	case GLUT_KEY_RIGHT:
+		move += 0.01;
+		glutPostRedisplay();
+		break;
+	/* kretanje ulevo */
+	case GLUT_KEY_LEFT:
+		move -= 0.01;
+		glutPostRedisplay();
+		break;
+
+	}
+	glutPostRedisplay();
+}
+
 static void on_reshape(int width, int height)
 {
 	/* pamtimo sirinu i visinu prozora */
@@ -126,7 +157,7 @@ static void on_display(void)
 
 
 	/* Koeficijent glatkosti materijala. */               
-	GLfloat shininess = 30;                               
+	GLfloat shininess = 60;                               
 
 	/* postavljanje svetla 0*/
 	glEnable(GL_LIGHT0);
@@ -142,7 +173,7 @@ static void on_display(void)
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_coeffs);  
 	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_coeffs);  
 	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specular_coeffs);
-	glMaterialf(GL_FRONT_AND_BACK,  GL_SHININESS, shininess);      
+	glMaterialf (GL_FRONT_AND_BACK,  GL_SHININESS, shininess);      
 
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 
@@ -156,17 +187,17 @@ static void on_display(void)
 			  0.7,0.3,0,
 			  0,1,0);
 
+	glShadeModel(GL_SMOOTH);
 
 
 	/* Crtamo podlogu */
 
-	glColor3f(0, 0, 1);
 	glBegin(GL_POLYGON);
 //		glNormal3f(0,1,0);
-		glVertex3f(-10,-0.05, -0.2);
-		glVertex3f(-10,-0.05,  0.2);
-		glVertex3f( 10,-0.05,  0.2);
-		glVertex3f( 10,-0.05, -0.2);
+		glVertex3f(-10, -0.05, -0.2);
+		glVertex3f(-10, -0.05,  0.2);
+		glVertex3f( 10, -0.05,  0.2);
+		glVertex3f( 10, -0.05, -0.2);
 	glEnd();
 	
 	/* crtanje prednje ivice podloge*/
@@ -180,14 +211,14 @@ static void on_display(void)
 
 	glPushMatrix();
 	/* crtamo sferu */
-	glTranslatef(0, sin(jump*pi / 180)*0.5, 0);
+	glTranslatef(move, sin(jump*pi / 180)*0.6, 0);
     glColor3f(1, 0, 0);
 
 	
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_coeffs_1);  
-	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_coeffs_1);  
-	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specular_coeffs_1);
-	glMaterialf( GL_FRONT_AND_BACK, GL_SHININESS, shininess);      
+	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_coeffs_1);  
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_coeffs_1);  
+	glMaterialfv(GL_FRONT, GL_SPECULAR, specular_coeffs_1);
+	glMaterialf( GL_FRONT, GL_SHININESS, shininess);      
 
     glutSolidSphere(0.05, 100,100);
 	
