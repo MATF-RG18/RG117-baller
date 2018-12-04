@@ -7,14 +7,10 @@ LDLIBS  = -lglut -lGLU -lGL
 $(PROGRAM): main.o
 	$(CC) $(LDFLAGS) -o $(PROGRAM) main.o $(LDLIBS) -lm
 
-.PHONY: beauty clean dist
+main.o : main.c
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-beauty:
-	-indent -kr -nut $(PROGRAM).c
-	-rm *~ *BAK
+.PHONY: clean
 
 clean:
 	-rm *.o $(PROGRAM) *core
-
-dist: clean
-	-tar -chvj -C .. -f ../$(PROGRAM).tar.bz2 $(PROGRAM)
