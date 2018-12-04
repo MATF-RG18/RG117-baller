@@ -1,15 +1,17 @@
-#include <stdlib.h>
-#include <GL/glut.h>
-#include <math.h>
+#include<stdlib.h>
+#include<GL/glut.h>
+#include<math.h>
 #include<stdbool.h>
+#include<stdio.h>
 
 #define pi 3.141592653589793
 double jump = 0;
 double move = 0;
 
 bool ball_jump= false;
-
-
+bool ball_move = false;
+float br = 0;
+int i = 2;
 
 
 /* Deklaracije callback funkcija. */
@@ -19,6 +21,13 @@ static void on_display(void);
 void specialInput(int key, int x, int y);
 void ball_jump_f(int value);
 void specialInput(int key, int x, int y);
+void ball_move_r_f(int value);
+
+void draw_cube();
+void draw_floor_1();
+void draw_floor_2();
+
+
 int main(int argc, char **argv)
 {
     /* Inicijalizuje se GLUT. */
@@ -68,6 +77,9 @@ static void on_keyboard(unsigned char key, int x, int y)
     }
 		
 }
+
+//funkcija za implementaciju skoka loptice 
+
 void ball_jump_f(int value){
 	if (value != 5) return;
 
@@ -82,17 +94,95 @@ void ball_jump_f(int value){
 		ball_jump = false;
 	}
 
+} 
+
+
+void floor_move_period(void){
+	//funkcija za pomeranje podloge
+
+	if (br >= 0.7){
+
+		glPushMatrix();
+		glMatrixMode(GL_PROJECTION);
+		glTranslatef(-0.01, 0, 0);
+		glPopMatrix();
+
+		//  povecavamo move za 0.01 kako bi loptica ostala 
+		//  u istoj poziciji
+		move += 0.01;
+
+		/*
+		 * ako move dodje u celobrojnu vrednost i ta celobrojna vrednost je
+		 * deljiva sa 4 treba da pomerimo poligon udesno
+		 */
+		if (((move - (int)move) < 0.01)&&((int)(move) % 4 == 0)){ 
+			//i - promenljiva koja odredjuje x koordinatu crtanja poligona
+			i+=4;
+		}
+
+	}else{
+		br += 0.01;
+	}
+
+
+}
+void ball_move_r_f(int value){
+	if (value != 1) return;
+
+	if (move <= 0.7) {
+		/*
+		 * dokle god loptica ne dodje u polozaj da kamera treba
+		 * da je prati, izvrsavamo samo pomeranje loptice
+		 */
+		move += 0.01;
+		br = br + 0.01;
+		if (ball_move)
+			glutTimerFunc(30,ball_move_r_f, 1);
+		else{
+			ball_move = false;
+		}
+	}
+	else {
+		/*
+		 * Kada loptica dodje u odredjenu poziciju, kamera pocinje
+		 * da je "prati", i poziva se funkcija za kretanje podloge u levo
+		 * a loptica stoji u mestu zajedno sa kamerom fiksirana
+		 */
+		floor_move_period();
+		br = br + 0.01;
+		if (ball_move)
+			glutTimerFunc(30,ball_move_r_f, 1);
+		else{
+			ball_move = false;
+		}
+	}
+
+	glutPostRedisplay();
+
+
 }
 
 void specialInput(int key, int x, int y){
+	/*
+	 * funkcija za registrovanje tastera strelice.
+	 * Na strelicu se zapocinje igrica
+	 */
 
     switch (key) {
 	/* kretanje udesno */
 	case GLUT_KEY_RIGHT:
-		move += 0.01;
-		glutPostRedisplay();
+	//	move += 0.01;
+		if (!ball_move){
+			glutTimerFunc(30, ball_move_r_f, 1);
+			ball_move = true;
+		}
 		break;
-	/* kretanje ulevo */
+	/* 
+	 * kretanje ulevo TODO
+	 * ---------------------
+	 *  za sada ne diram, kasnije ce imati svrhu u kodu 
+	 *  koji cu tek implementirati
+	 * */
 	case GLUT_KEY_LEFT:
 		move -= 0.01;
 		glutPostRedisplay();
@@ -110,57 +200,150 @@ static void on_reshape(int width, int height)
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(60, (float)width/height, 1, 1000);
+	gluPerspective(60, (float)width/height, 1, 100);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(0.7,0.3,1,
+    gluLookAt(0.7,0.3,1.22,
 			  0.7,0.3,0,
 			  0,1,0);
+}
+
+void draw_floor_2(){
+
+	/* Crtamo podlogu */
+
+	glBegin(GL_POLYGON);
+		glNormal3f(0,1,0);
+		glVertex3f(i,   -0.05, -0.2);
+		glVertex3f(i,   -0.05,  0.2);
+		glVertex3f(i+4, -0.05,  0.2);
+		glVertex3f(i+4, -0.05, -0.2);
+	glEnd();
+	
+	/* crtanje prednje ivice podloge*/
+	glBegin(GL_POLYGON);
+		glNormal3f(0,0,-1);
+		glVertex3f(i  , -0.05, 0.2 );
+		glVertex3f(i  ,    -5, 0.2 );
+		glVertex3f(i+4,    -5, 0.2 );
+		glVertex3f(i+4, -0.05, 0.2 );
+	glEnd();
+
+}
+
+void draw_floor_1(){
+
+	/* Crtamo podlogu */
+	glBegin(GL_POLYGON);
+		glNormal3f(0,1,0);
+		glVertex3f(i-3, -0.05, -0.2);
+		glVertex3f(i-3, -0.05,  0.2);
+		glVertex3f(i  , -0.05,  0.2);
+		glVertex3f(i  , -0.05, -0.2);
+	glEnd();
+	
+	/* crtanje prednje ivice podloge*/
+	glBegin(GL_POLYGON);
+		glNormal3f(0,0,-1);
+		glVertex3f(i-3, -0.05, 0.2 );
+		glVertex3f(i-3,    -5, 0.2 );
+		glVertex3f(i  ,    -5, 0.2 );
+		glVertex3f(i  , -0.05, 0.2 );
+	glEnd();
+
+	/*
+	 * Par primera prepreka
+	 *
+	 * TODO : implementirati dinamicko generisanje prepreka
+	 */
+	glPushMatrix();
+		glTranslatef(2,0.1,0);
+		draw_cube();
+	glPopMatrix();
+
+	glPushMatrix();
+		glTranslatef(1.3,0.2,0);
+		draw_cube();
+	glPopMatrix();
+
+	glPushMatrix();
+		glTranslatef(1.9,0.1,0);
+		glScalef(2,1,1);
+		draw_cube();
+	glPopMatrix();
+}
+
+
+void draw_sphere(){
+	/* ambijentalna refleksija za sferu*/
+	GLfloat ambient_lopta[] = {1, 0, 0, 1};      
+	                                                      
+	/* difuzna refleksija za sferu*/
+	GLfloat diffuse_lopta[] = {1, 0, 0, 1};        
+
+	/* spekularna refleksija za sferu*/
+	GLfloat specular_lopta[] = { 1, 1, 1, 1 };           
+
+	GLfloat shininess = 60;
+
+	glPushMatrix();
+	/* crtamo sferu */
+	glTranslatef(move, sin(jump*pi / 180)*0.6, 0);
+
+	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_lopta);  
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_lopta);  
+	glMaterialfv(GL_FRONT, GL_SPECULAR, specular_lopta);
+	glMaterialf( GL_FRONT, GL_SHININESS, shininess);      
+
+    glutSolidSphere(0.05, 50,50);
+	
+	glPopMatrix();
+
+}
+
+
+void draw_cube(){
+	// Funkcija za crtanje kocke
+	glPushMatrix();
+	glScalef(1,0.2,1);
+	glutSolidCube(0.2);
+	glPopMatrix();
 }
 
 static void on_display(void)
 {
 	/* postavljamo poziciju svetla */
-	GLfloat light_position[] = {7,9,-7,1};
+	GLfloat light_position[] = {0,2,6,0};
 														
 	/* Ambijentalna boja svetla. */                       
-	GLfloat light_ambient[] = { 0.1, 0.1, 0.1, 1 };       
+	GLfloat light_ambient[] = { 0, 0, 0, 1 };       
 	                                                      
 	/* Difuzna boja svetla. */                            
 	GLfloat light_diffuse[] = { 0.7, 0.7, 0.7, 1 };       
 	                                                      
 	/* Spekularna boja svetla. */                         
-	GLfloat light_specular[] = { 0.9, 0.9, 0.9, 1 };      
+	GLfloat light_specular[] = { 1, 1, 1, 1 };      
 
-	// ---------------------------------------------------------
-	                                                      
-	/* ambijentalna refleksija za sferu*/
-	GLfloat ambient_coeffs_1[] = {255/255, 99/255, 71/255, 1};      
-	                                                      
-	/* difuzna refleksija za sferu*/
-	GLfloat diffuse_coeffs_1[] = {255/255, 99/255, 71/255, 1};        
-
-	/* spekularna refleksija za sferu*/
-	GLfloat specular_coeffs_1[] = { 1, 1, 1, 1 };           
 
 	// ----------------------------------------------------------
 
 	/* ambijentalna refleksija za poligon */
-	GLfloat ambient_coeffs[] = { (float)50/255, (float)205/255, (float)50/255, 1};      
+	GLfloat ambient_coeffs[] = {(float)66/255, (float)244/255,(float)92/255, 1};      
 
 	/* difuzna refleksija za poligon */
-	GLfloat diffuse_coeffs[] = {(float)50/255, (float)205/255, (float)50/255, 1};        
+	GLfloat diffuse_coeffs[] = {(float)80/255, (float)244/255,(float)69/255,0, 0, 0, 1};        
 
 	/* spekularna refleksija za poligon */
-	GLfloat specular_coeffs[] = { 1, 1, 1, 1 };           
+	GLfloat specular_coeffs[] = { 0, 0, 0, 1 };           
 
 
 	/* Koeficijent glatkosti materijala. */               
-	GLfloat shininess = 60;                               
+	GLfloat shininess = 60;
 
 	/* postavljanje svetla 0*/
 	glEnable(GL_LIGHT0);
+	glEnable(GL_NORMALIZE);
 	glEnable(GL_LIGHTING);
 	glEnable(GL_DEPTH_TEST);
 
@@ -183,46 +366,15 @@ static void on_display(void)
     /* Podesavamo pogled */
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(0.7,0.3,1,
+    gluLookAt(0.7,0.3,1.22,
 			  0.7,0.3,0,
 			  0,1,0);
 
-	glShadeModel(GL_SMOOTH);
+	draw_floor_1();
+	draw_floor_2();
 
 
-	/* Crtamo podlogu */
-
-	glBegin(GL_POLYGON);
-//		glNormal3f(0,1,0);
-		glVertex3f(-10, -0.05, -0.2);
-		glVertex3f(-10, -0.05,  0.2);
-		glVertex3f( 10, -0.05,  0.2);
-		glVertex3f( 10, -0.05, -0.2);
-	glEnd();
-	
-	/* crtanje prednje ivice podloge*/
-	glBegin(GL_POLYGON);
-		glVertex3f(-100, -0.05, -0.2 );
-		glVertex3f(-100, -50  , -0.2 );
-		glVertex3f( 100, -50  , -0.2 );
-		glVertex3f( 100, -0.05, -0.2 );
-	glEnd();
-	
-
-	glPushMatrix();
-	/* crtamo sferu */
-	glTranslatef(move, sin(jump*pi / 180)*0.6, 0);
-    glColor3f(1, 0, 0);
-
-	
-	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_coeffs_1);  
-	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_coeffs_1);  
-	glMaterialfv(GL_FRONT, GL_SPECULAR, specular_coeffs_1);
-	glMaterialf( GL_FRONT, GL_SHININESS, shininess);      
-
-    glutSolidSphere(0.05, 100,100);
-	
-	glPopMatrix();
+	draw_sphere();
     
 	
 	/* Nova slika se salje na ekran. */
