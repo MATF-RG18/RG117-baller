@@ -13,4 +13,4 @@ main.o : main.c
 .PHONY: clean
 
 clean:
-	-rm *.o $(PROGRAM) *core
+	-rm *.o $(PROGRAM) 
