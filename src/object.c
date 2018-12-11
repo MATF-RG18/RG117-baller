@@ -20,7 +20,7 @@ void draw_cube(){
 	glPopMatrix();
 }
 
-void draw_sphere(double* move, double* jump){
+void draw_sphere(double* move, double* jump, double* h){
 	/* ambijentalna refleksija za sferu*/
 	GLfloat ambient_lopta[] = {1, 0, 0, 1};      
 	                                                      
@@ -34,7 +34,7 @@ void draw_sphere(double* move, double* jump){
 
 	glPushMatrix();
 	/* crtamo sferu */
-	glTranslatef(*move, sin((*jump)*pi / 180)*0.6, 0);
+	glTranslatef(*move, sin((*jump)*pi / 180)*0.6 + *h, 0);
 
 	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_lopta);  
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_lopta);  
@@ -65,6 +65,27 @@ void draw_floor_1(int* i){
 		glVertex3f((*i)+4,    -5, 0.2 );
 		glVertex3f((*i)+4, -0.05, 0.2 );
 	glEnd();
+
+	glPushMatrix();
+		glTranslatef((*i)+((float)prvi*(1/10.0)) + 1,0.1,0);
+		draw_cube();
+	glPopMatrix();
+
+	glPushMatrix();
+		glTranslatef((*i)+((float)drugi*(1/10.0)) + 2,0.25,0);
+		draw_cube();
+	glPopMatrix();
+
+	glPushMatrix();
+		glTranslatef((*i)+((float)treci*(1/10.0)) + 3,0.2,0);
+		draw_cube();
+	glPopMatrix();
+
+	glPushMatrix();
+		glTranslatef((*i)+(float)cetvrti*(1/10.0) + 4,0.3,0);
+		glScalef(2,1,1);
+		draw_cube();
+	glPopMatrix();
 
 }
 
@@ -106,7 +127,7 @@ void draw_floor_2(int* i){
 	glPopMatrix();
 
 	glPushMatrix();
-		glTranslatef((*i)+(float)cetvrti*(1/10.0) + 4,0.3,0);
+		glTranslatef((*i)+(float)cetvrti*(1/10.0) + 3.3,0.3,0);
 		glScalef(2,1,1);
 		draw_cube();
 	glPopMatrix();

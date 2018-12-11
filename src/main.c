@@ -19,6 +19,9 @@ float br = 0;
 //i - promenljiva koja odredjuje x koordinatu crtanja poligona
 int i = 0;
 
+//h - promenljiva koja odredjuje visinu na kojoj loptica stoji
+double h;
+
 
 /* Deklaracije callback funkcija. */
 static void on_keyboard(unsigned char key, int x, int y);
@@ -261,12 +264,6 @@ static void on_reshape(int width, int height)
 			  0,1,0);
 }
 
-
-	
-
-
-
-
 static void on_display(void)
 {
 	/* postavljamo poziciju svetla */
@@ -321,14 +318,15 @@ static void on_display(void)
     /* Podesavamo pogled */
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(0.7,0.3,1.22,
+    gluLookAt(0.7,0.3,1.3,
 			  0.7,0.3,0,
 			  0,1,0);
 
 	draw_floor_1(&i);
 	draw_floor_2(&i);
 
-	draw_sphere(&move, &jump);
+
+	draw_sphere(&move, &jump, &h);
 
 	
 	/* Nova slika se salje na ekran. */
