@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+# Text files
+*.txt
+
+# Backup VIM files
+*.swp
