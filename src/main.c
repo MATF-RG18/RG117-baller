@@ -4,6 +4,7 @@
 #include<stdbool.h>
 #include<stdio.h>
 #include<time.h>
+#include"pomocne.h"
 #include "object.h"
 
 
@@ -15,23 +16,47 @@ bool ball_jump= false;
 bool ball_move_r= false;
 bool ball_move_l= false;
 float br = 0;
+bool ball_free_fall = false;
+
+// Posto se trenutno u poligon_x nalaze koordinate celih brojeva
+// tj prepreke/police se iscrtavaju na koordinatama celih brojeva
+// sirina_prepreke_min i sirina_prepreke_max oznacavaju koliko blizu
+// loptica treba da se nalazi prepreci dok je u vazduhu da bi pri sletanju
+// ostala na visini police umesto da prodje kroz nju i vrati se na poligon
+double sirina_prepreke_min = 0.14;
+double sirina_prepreke_max = 0.88;
+
+//na_podlozi - promenljiva koja kada se lopta nalazi na podlozi 
+//predstavlja visinu podloge i menja se kada je loptica na polici/prepreci
+//i postaje jednaka visini prepreke. Onda i skok sa prepreke se implementira
+//iz te pozicije umesto sa podloge (Ox=0).
+double na_podlozi;
 
 //i - promenljiva koja odredjuje x koordinatu crtanja poligona
 int i = 0;
 
 //h - promenljiva koja odredjuje visinu na kojoj loptica stoji
-double h;
+double h = 0;
 
+// y koordinata loptice koja sluzi za simulaciju skoka
+double ball_y_coord = 0;
+
+// niz x i y koordinata za poligon
+// TODO - trenutno sluze samo za primer, odradice se elegantnije
+double poligon_x[200] = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+double poligon_y[200] = {0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1};
+
+// promenljive za poziciju lopte pri skoku
+int degree = 180;
+double start_jump_pos = 0;
 
 /* Deklaracije callback funkcija. */
 static void on_keyboard(unsigned char key, int x, int y);
 static void on_reshape(int width, int height);
 static void on_display(void);
-void specialInput(int key, int x, int y);
 void ball_jump_f(int value);
 void ball_move_r_f(int value);
 void ball_move_l_f(int value);
-void set_new_objects();
 /* funkcija koja registruje kada se pusti taster na tastaturi koji smo drzali */
 void keyboard_up(unsigned char key, int x, int y);
 
@@ -70,6 +95,9 @@ int main(int argc, char **argv)
     /* Obavlja se OpenGL inicijalizacija. */
     glClearColor(0.75, 0.75, 0.75, 0);
 
+	
+
+
     /* Program ulazi u glavnu petlju. */
     glutMainLoop();
 
@@ -83,21 +111,26 @@ static void on_keyboard(unsigned char key, int x, int y)
 	(void)y;
     switch (key) {
     case 27:
+	case 'q':
         /* Zavrsava se program. */
         exit(0);
         break;
 	case 32:
-		if (!ball_jump)
+		// implementacija skoka
+		if (!ball_jump){
 			glutTimerFunc(30, ball_jump_f, 5);
 			ball_jump = true;
+		}
 		break;
 	case 'l':
+		// implementacija kretanja udesno
 		if (!ball_move_r){
 			glutTimerFunc(20, ball_move_r_f, 1);
 			ball_move_r = true;
 		}
 		break;
 	case 'j':
+		// implementacija kretanja ulevo
 		if (!ball_move_l){
 			glutTimerFunc(20, ball_move_l_f, 2);
 			ball_move_l = true;
@@ -108,9 +141,11 @@ static void on_keyboard(unsigned char key, int x, int y)
 
 /*
  * funkcija koja registruje pustanje tastera sa tastature.
- * Kada se to desi hocemo da prekinemo animaciju.
+ * Kada se to desi hocemo da prekinemo animaciju tj prekinemo kretanje(kretanje se 
+ * dogadja samo kada se drze tasteri l i j).
  */
 void keyboard_up(unsigned char key, int x, int y){
+	//da nam -Wall i -Wextra ne bi prijavljivali warning kastujemo u void x i y.
 	(void)x;
 	(void)y;
 	switch (key){
@@ -127,14 +162,31 @@ void keyboard_up(unsigned char key, int x, int y){
 void ball_jump_f(int value){
 	if (value != 5) return;
 
-	jump += 7; 
+	jump += 1; 
+
+	if ( (apsolutno((move - ((int)move+1))) <= sirina_prepreke_min) || (apsolutno(move - ((int)move+1))) >= sirina_prepreke_max ){
+ 		if (jump <= 24 && jump > 23){
+			// u ovaj deo se ulazi ako je loptica u letu i nalazi se iznad police
+			// onda se pocetna visina lopte povecava na 0.17 sto je visina police
+			// da bi dala efekat da loptica stoji na polici. Takodje se prekida 
+			// animacija zato sto je loptica vrlo blizu podloge pa je neprimetan prekid.
+			// (kada jump predje 24 onda 7*jump prelazi 180 stepeni pa se animacija sama po
+			// sebi prekida.)
+			na_podlozi = 0.17;
+			jump = 0;
+			ball_jump=false;
+		}
+	}else{
+		na_podlozi = 0;
+	}
 
 	glutPostRedisplay();
 
-	if ((ball_jump) && (jump <= 180))
+	if ((ball_jump) && (jump*7 <= degree)){
 		glutTimerFunc(30, ball_jump_f, 5);
+	}
 	else {
-		jump = 0;
+		jump = start_jump_pos;
 		ball_jump = false;
 	}
 
@@ -163,15 +215,37 @@ void floor_move_period(void){
 		/*
 		 * ako move dodje u celobrojnu vrednost i ta celobrojna vrednost je
 		 * deljiva sa 6(duzinu polovine poligona) treba da pomerimo poligon udesno
+		 * Ovaj korak radimo kako bi ustedeli na prostoru i vremenu u iscrtavanju, pa da
+		 * se ceo poligon ne bi iscrtavao iscrtavaju se samo delovi koji su vidljivi i blizu ivica
+		 * ovo se najlakse moze videti kada postavite trecu koordinatu gluLookAt-a postavite na 5 i odaljite kameru.
 		 */
 		if (((move - (int)move) < 0.02)&&((int)(move+6) % 6 == 0)){ 
 			//i - promenljiva koja odredjuje x koordinatu crtanja poligona
 			i+=6;
-			set_new_objects();
 		}
 	}else{
 		br += 0.02;
 	}
+}
+
+// funkcija koja implementira slobodan pad sa podloge.
+void free_fall_f(int value){
+	if (value != 55) return;
+
+	glutPostRedisplay();
+
+	if (ball_free_fall && ball_y_coord >= 0.05 && jump < 25){
+		/* 
+		 * sve dok koordinata lopte ne dodje do poda pusta se animacija
+		 * za padanje loptice sa police*/
+		++jump;
+		glutTimerFunc(30, free_fall_f, 55);
+	}else{
+		ball_free_fall = false;
+		ball_y_coord = start_jump_pos;
+		jump = 0;
+	}
+
 }
 
 void ball_move_r_f(int value){
@@ -179,18 +253,37 @@ void ball_move_r_f(int value){
 
 	glutPostRedisplay();
 
+	if ( (apsolutno((move - ((int)move+1))) <= sirina_prepreke_min) || (apsolutno(move - ((int)move+1))) >= sirina_prepreke_max ){
+ 		if (jump <= 24 && jump > 23){
+			/*
+			 * u ovaj deo if-a se ulazi kada se loptica pomera udesno i pri skoku se 
+			 * nadje tik iznad police, tada visinu iscrtavanja lopte uvecavamo kako bi
+			 * simulirali da je loptica na polici.
+			 */
+			na_podlozi = 0.17;
+		}
+	}else{
+		if (jump == start_jump_pos && ball_y_coord > 0){
+			/*
+			 * u ovaj deo koda se ulazi kada se pomeramo udesno sa lopticom na polici i
+			 * dodjemo do ivice kada treba da se implementira slobodan pad loptice sa police
+			 */
+			jump = 23.6;
+			glutTimerFunc(30, free_fall_f, 55);
+			ball_free_fall = true;
+		}
+		na_podlozi = 0;
+	}
+
 	if (br <= 0.7) {
 		/*
 		 * dokle god loptica ne dodje u polozaj da kamera treba
-		 * da je prati, izvrsavamo samo pomeranje loptice
+		 * da je prati, izvrsavamo samo pomeranje loptice - ovo je samo na pocetku.
 		 */
 		move += 0.02;
 		br = br + 0.02;
 		if (ball_move_r){
 			glutTimerFunc(20,ball_move_r_f, 1);
-		}
-		else{
-			ball_move_r = false;
 		}
 	}
 	else {
@@ -204,16 +297,30 @@ void ball_move_r_f(int value){
 		if (ball_move_r){
 			glutTimerFunc(20,ball_move_r_f, 1);
 		}
-		else{
-			ball_move_r = false;
-		}
 	}
+
 }
 
 void ball_move_l_f(int value){
 	if (value != 2) return;
 
 	glutPostRedisplay();
+	/*
+	 * ovde se desava ista stvar koja je opisana u kretanju loptice udesno
+	 */
+
+	if ( (apsolutno((move - ((int)move+1))) <= sirina_prepreke_min) || (apsolutno(move - ((int)move+1))) >= sirina_prepreke_max ){
+ 		if (jump <= 24 && jump > 23){
+			na_podlozi = 0.17;
+		}
+	}else{
+		if (jump == start_jump_pos && ball_y_coord > 0){
+			jump = 23.6;
+			glutTimerFunc(30, free_fall_f, 55);
+			ball_free_fall = true;
+		}
+		na_podlozi = 0;
+	}
 
 	if (br <= 0.7) {
 		/*
@@ -224,9 +331,6 @@ void ball_move_l_f(int value){
 		br = br - 0.02;
 		if (ball_move_l){
 			glutTimerFunc(20,ball_move_l_f, 2);
-		}
-		else{
-			ball_move_l = false;
 		}
 	}
 	else {
@@ -240,9 +344,6 @@ void ball_move_l_f(int value){
 		move -= 0.02;
 		if (ball_move_l){
 			glutTimerFunc(20,ball_move_l_f, 2);
-		}
-		else{
-			ball_move_l = false;
 		}
 	}
 }
@@ -322,13 +423,13 @@ static void on_display(void)
 			  0.7,0.3,0,
 			  0,1,0);
 
+	iscrtaj_prepreke(poligon_x, poligon_y);
 	draw_floor_1(&i);
 	draw_floor_2(&i);
 
+	ball_y_coord = sin((jump*7)*pi / 180)*0.6 + na_podlozi;
+	draw_sphere(&move, ball_y_coord);
 
-	draw_sphere(&move, &jump, &h);
-
-	
 	/* Nova slika se salje na ekran. */
     glutSwapBuffers();
 }

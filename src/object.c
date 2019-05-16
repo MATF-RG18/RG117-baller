@@ -9,9 +9,6 @@
 
 #define pi 3.141592653589793
 
-// promenljive koje odredjuju koordinate crtanja parova prepreka
-int prvi = 3, drugi = 7, treci = 4, cetvrti = 8;
-
 void draw_cube(){
 	// Funkcija za crtanje kocke
 	glPushMatrix();
@@ -20,10 +17,10 @@ void draw_cube(){
 	glPopMatrix();
 }
 
-void draw_sphere(double* move, double* jump, double* h){
+void draw_sphere(double* move, double jump){
 	/* ambijentalna refleksija za sferu*/
 	GLfloat ambient_lopta[] = {1, 0, 0, 1};      
-	                                                      
+	
 	/* difuzna refleksija za sferu*/
 	GLfloat diffuse_lopta[] = {1, 0, 0, 1};        
 
@@ -34,7 +31,7 @@ void draw_sphere(double* move, double* jump, double* h){
 
 	glPushMatrix();
 	/* crtamo sferu */
-	glTranslatef(*move, sin((*jump)*pi / 180)*0.6 + *h, 0);
+	glTranslatef(*move, jump, 0);
 
 	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_lopta);  
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_lopta);  
@@ -44,6 +41,31 @@ void draw_sphere(double* move, double* jump, double* h){
     glutSolidSphere(0.05, 50,50);
 	
 	glPopMatrix();
+}
+
+void iscrtaj_prepreke(double poligon_x[], double poligon_y[]){
+
+	for (int i=0; i<10; i++){
+		glPushMatrix();
+			glTranslatef(poligon_x[i],  poligon_y[i],0);
+			draw_cube();
+		glPopMatrix();
+
+		glPushMatrix();
+			glTranslatef(poligon_x[i+1],poligon_y[i+1],0);
+			draw_cube();
+		glPopMatrix();
+
+		glPushMatrix();
+			glTranslatef(poligon_x[i+2],poligon_y[i+2],0);
+			draw_cube();
+		glPopMatrix();
+
+		glPushMatrix();
+			glTranslatef(poligon_x[i+3],poligon_y[i+3],0);
+			draw_cube();
+		glPopMatrix();
+	}
 }
 
 void draw_floor_1(int* i){
@@ -65,27 +87,6 @@ void draw_floor_1(int* i){
 		glVertex3f((*i)+4,    -5, 0.2 );
 		glVertex3f((*i)+4, -0.05, 0.2 );
 	glEnd();
-
-	glPushMatrix();
-		glTranslatef((*i)+((float)prvi*(1/10.0)) + 1,0.1,0);
-		draw_cube();
-	glPopMatrix();
-
-	glPushMatrix();
-		glTranslatef((*i)+((float)drugi*(1/10.0)) + 2,0.25,0);
-		draw_cube();
-	glPopMatrix();
-
-	glPushMatrix();
-		glTranslatef((*i)+((float)treci*(1/10.0)) + 3,0.2,0);
-		draw_cube();
-	glPopMatrix();
-
-	glPushMatrix();
-		glTranslatef((*i)+(float)cetvrti*(1/10.0) + 4,0.3,0);
-		glScalef(2,1,1);
-		draw_cube();
-	glPopMatrix();
 
 }
 
@@ -110,36 +111,4 @@ void draw_floor_2(int* i){
 		glVertex3f((*i)+10, -0.05, 0.2 );
 	glEnd();
 
-	//iscrtavanje prepreka 
-	glPushMatrix();
-		glTranslatef((*i)+((float)prvi*(1/10.0)) + 1,0.1,0);
-		draw_cube();
-	glPopMatrix();
-
-	glPushMatrix();
-		glTranslatef((*i)+((float)drugi*(1/10.0)) + 2,0.25,0);
-		draw_cube();
-	glPopMatrix();
-
-	glPushMatrix();
-		glTranslatef((*i)+((float)treci*(1/10.0)) + 3,0.2,0);
-		draw_cube();
-	glPopMatrix();
-
-	glPushMatrix();
-		glTranslatef((*i)+(float)cetvrti*(1/10.0) + 3.3,0.3,0);
-		glScalef(2,1,1);
-		draw_cube();
-	glPopMatrix();
-}
-
-void set_new_objects(){
-	/* postavljamo seme za random funkciju */
-	srand(time(NULL));
-
-	int k = rand();
-	prvi = k%10;
-	drugi = (k/10)%10;
-	treci = (k/100)%10;
-	cetvrti = (k/1000)%10;
 }
