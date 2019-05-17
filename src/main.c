@@ -220,7 +220,7 @@ void ball_jump_f(int value){
 	}
 } 
 bool pozicija(double x){
-	return (((apsolutno((x - ((int)x+1))) <= sirina_prepreke_min) || (apsolutno(x - ((int)x+1))) >= sirina_prepreke_max));
+	return (move >= 1.8 && ((apsolutno((x - ((int)x+1))) <= sirina_prepreke_min) || (apsolutno(x - ((int)x+1))) >= sirina_prepreke_max));
 }
 
 void floor_move_period(void){
