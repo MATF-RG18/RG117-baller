@@ -17,14 +17,15 @@ bool ball_move_r= false;
 bool ball_move_l= false;
 float br = 0;
 bool ball_free_fall = false;
-
+//promenljiva koja odredjuje da li je skok pokrenut sa police
+bool jump_from_hight = false;
 // Posto se trenutno u poligon_x nalaze koordinate celih brojeva
 // tj prepreke/police se iscrtavaju na koordinatama celih brojeva
 // sirina_prepreke_min i sirina_prepreke_max oznacavaju koliko blizu
 // loptica treba da se nalazi prepreci dok je u vazduhu da bi pri sletanju
 // ostala na visini police umesto da prodje kroz nju i vrati se na poligon
-double sirina_prepreke_min = 0.14;
-double sirina_prepreke_max = 0.88;
+double sirina_prepreke_min = 0.11;
+double sirina_prepreke_max = 0.89;
 
 //na_podlozi - promenljiva koja kada se lopta nalazi na podlozi 
 //predstavlja visinu podloge i menja se kada je loptica na polici/prepreci
@@ -59,7 +60,11 @@ void ball_move_r_f(int value);
 void ball_move_l_f(int value);
 /* funkcija koja registruje kada se pusti taster na tastaturi koji smo drzali */
 void keyboard_up(unsigned char key, int x, int y);
+// funkcija koja implementira slobodan pad sa podloge.
+void free_fall_f(int value);
 
+// funkcija koja odredjuje da li se x kao koordinata nalazi u poziciji gde je polica
+bool pozicija(double x);
 
 // funkcija koja implementira ostajanje loptice na polici kada se nadje iznad iste
 void provera_iznad_police();
@@ -108,7 +113,6 @@ int main(int argc, char **argv)
     return 0;
 }
 
-
 static void on_keyboard(unsigned char key, int x, int y)
 {
 	(void)x;
@@ -122,6 +126,7 @@ static void on_keyboard(unsigned char key, int x, int y)
 	case 32:
 		// implementacija skoka
 		if (!ball_jump){
+			if (na_podlozi > 0) jump_from_hight = true;
 			glutTimerFunc(30, ball_jump_f, 5);
 			ball_jump = true;
 		}
@@ -145,7 +150,7 @@ static void on_keyboard(unsigned char key, int x, int y)
 
 /*
  * funkcija koja registruje pustanje tastera sa tastature.
- * Kada se to desi hocemo da prekinemo animaciju tj prekinemo kretanje(kretanje se 
+ * Kada se to desi hocemo da prekinemo animaciju tj prekinemo kretanje(kretanje se
  * dogadja samo kada se drze tasteri l i j).
  */
 void keyboard_up(unsigned char key, int x, int y){
@@ -163,26 +168,26 @@ void keyboard_up(unsigned char key, int x, int y){
 }
 
 void provera_iznad_police(){
-	// ova funkcija ce imati efekat i izvrsiti nesto samo u slucaju da se 
+	// ova funkcija ce imati efekat i izvrsiti nesto samo u slucaju da se
 	// loptica nadje iznad podloge u letu i treba da "ostane na polici".
 
-	if ( (apsolutno((move - ((int)move+1))) <= sirina_prepreke_min) || (apsolutno(move - ((int)move+1))) >= sirina_prepreke_max ){
+	if (pozicija(move)){
  		if (jump <= 24 && jump > 23){
 			// u ovaj deo se ulazi ako je loptica u letu i nalazi se iznad police
 			// onda se pocetna visina lopte povecava na 0.17 sto je visina police
-			// da bi dala efekat da loptica stoji na polici. Takodje se prekida 
+			// da bi dala efekat da loptica stoji na polici. Takodje se prekida
 			// animacija zato sto je loptica vrlo blizu podloge pa je neprimetan prekid.
 			// (kada jump predje 24 onda 7*jump prelazi 180 stepeni pa se animacija sama po
-			// sebi prekida.)
+			// sebi prekida.
 			na_podlozi = 0.17;
 			jump = 0;
 			ball_jump=false;
 		}
 	}else{
-		na_podlozi = 0;
+		if (!jump_from_hight)
+			na_podlozi = 0;
 	}
 }
-
 
 //funkcija za implementaciju skoka loptice 
 void ball_jump_f(int value){
@@ -194,14 +199,19 @@ void ball_jump_f(int value){
 
 	glutPostRedisplay();
 
-	if ((ball_jump) && (jump*7 <= degree)){
+	if (((ball_jump) && (jump*7 <= degree))||((jump_from_hight && ball_jump && jump*7 < degree + 20))){
 		glutTimerFunc(30, ball_jump_f, 5);
 	}
 	else {
 		jump = start_jump_pos;
+		if (jump_from_hight && !pozicija(move)) na_podlozi = 0; 
 		ball_jump = false;
+		jump_from_hight = false;
 	}
 } 
+bool pozicija(double x){
+	return (((apsolutno((x - ((int)x+1))) <= sirina_prepreke_min) || (apsolutno(x - ((int)x+1))) >= sirina_prepreke_max));
+}
 
 void floor_move_period(void){
 	//funkcija za pomeranje podloge
@@ -238,7 +248,6 @@ void floor_move_period(void){
 	}
 }
 
-// funkcija koja implementira slobodan pad sa podloge.
 void free_fall_f(int value){
 	if (value != 55) return;
 
@@ -253,12 +262,15 @@ void free_fall_f(int value){
 	}else{
 		ball_free_fall = false;
 		ball_y_coord = start_jump_pos;
+		na_podlozi = 0;
 		jump = 0;
 	}
 }
 
 void animiraj_slobodan_pad(){
-	if ( (apsolutno((move - ((int)move+1))) <= sirina_prepreke_min) || (apsolutno(move - ((int)move+1))) >= sirina_prepreke_max ){
+// ime ove funkcije je samo deo funkcionalnosti funkcije(svi znamo koliko je tesko
+// dati naziv funkciji. Ime se odnosi na drugi deo velikog if-a dok prvi deo ima svoj komentar)
+	if (pozicija(move)){
  		if (jump <= 24 && jump > 23){
 			/*
 			 * u ovaj deo if-a se ulazi kada se loptica pomera udesno i pri skoku se 
@@ -273,11 +285,11 @@ void animiraj_slobodan_pad(){
 			 * u ovaj deo koda se ulazi kada se pomeramo udesno sa lopticom na polici i
 			 * dodjemo do ivice kada treba da se implementira slobodan pad loptice sa police
 			 */
+			na_podlozi = 0;
 			jump = 23.6;
 			glutTimerFunc(30, free_fall_f, 55);
 			ball_free_fall = true;
 		}
-		na_podlozi = 0;
 	}
 }
 
