@@ -61,7 +61,11 @@ void ball_move_l_f(int value);
 void keyboard_up(unsigned char key, int x, int y);
 
 
+// funkcija koja implementira ostajanje loptice na polici kada se nadje iznad iste
+void provera_iznad_police();
 
+// funkcija animiraj_slobodan_pad ima opis unutar definicije
+void animiraj_slobodan_pad();
 
 int main(int argc, char **argv)
 {
@@ -158,11 +162,9 @@ void keyboard_up(unsigned char key, int x, int y){
 	}
 }
 
-//funkcija za implementaciju skoka loptice 
-void ball_jump_f(int value){
-	if (value != 5) return;
-
-	jump += 1; 
+void provera_iznad_police(){
+	// ova funkcija ce imati efekat i izvrsiti nesto samo u slucaju da se 
+	// loptica nadje iznad podloge u letu i treba da "ostane na polici".
 
 	if ( (apsolutno((move - ((int)move+1))) <= sirina_prepreke_min) || (apsolutno(move - ((int)move+1))) >= sirina_prepreke_max ){
  		if (jump <= 24 && jump > 23){
@@ -179,6 +181,16 @@ void ball_jump_f(int value){
 	}else{
 		na_podlozi = 0;
 	}
+}
+
+
+//funkcija za implementaciju skoka loptice 
+void ball_jump_f(int value){
+	if (value != 5) return;
+
+	jump += 1; 
+
+	provera_iznad_police();
 
 	glutPostRedisplay();
 
@@ -189,9 +201,7 @@ void ball_jump_f(int value){
 		jump = start_jump_pos;
 		ball_jump = false;
 	}
-
 } 
-
 
 void floor_move_period(void){
 	//funkcija za pomeranje podloge
@@ -245,14 +255,9 @@ void free_fall_f(int value){
 		ball_y_coord = start_jump_pos;
 		jump = 0;
 	}
-
 }
 
-void ball_move_r_f(int value){
-	if (value != 1) return;
-
-	glutPostRedisplay();
-
+void animiraj_slobodan_pad(){
 	if ( (apsolutno((move - ((int)move+1))) <= sirina_prepreke_min) || (apsolutno(move - ((int)move+1))) >= sirina_prepreke_max ){
  		if (jump <= 24 && jump > 23){
 			/*
@@ -274,6 +279,14 @@ void ball_move_r_f(int value){
 		}
 		na_podlozi = 0;
 	}
+}
+
+void ball_move_r_f(int value){
+	if (value != 1) return;
+
+	glutPostRedisplay();
+
+	animiraj_slobodan_pad();
 
 	if (br <= 0.7) {
 		/*
@@ -305,22 +318,8 @@ void ball_move_l_f(int value){
 	if (value != 2) return;
 
 	glutPostRedisplay();
-	/*
-	 * ovde se desava ista stvar koja je opisana u kretanju loptice udesno
-	 */
 
-	if ( (apsolutno((move - ((int)move+1))) <= sirina_prepreke_min) || (apsolutno(move - ((int)move+1))) >= sirina_prepreke_max ){
- 		if (jump <= 24 && jump > 23){
-			na_podlozi = 0.17;
-		}
-	}else{
-		if (jump == start_jump_pos && ball_y_coord > 0){
-			jump = 23.6;
-			glutTimerFunc(30, free_fall_f, 55);
-			ball_free_fall = true;
-		}
-		na_podlozi = 0;
-	}
+	animiraj_slobodan_pad();
 
 	if (br <= 0.7) {
 		/*
