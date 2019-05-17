@@ -189,6 +189,14 @@ void provera_iznad_police(){
 	}
 }
 
+void provera_ispod_police(){
+	// funkcija koja proverava da li je loptica pri skoku ispod police
+	// i ne dozvoljava skok ako jeste.
+	if (pozicija(move) && jump == 1 && na_podlozi == 0){
+		jump = 25;
+	}
+}
+
 //funkcija za implementaciju skoka loptice 
 void ball_jump_f(int value){
 	if (value != 5) return;
@@ -196,6 +204,8 @@ void ball_jump_f(int value){
 	jump += 1; 
 
 	provera_iznad_police();
+
+	provera_ispod_police();
 
 	glutPostRedisplay();
 
