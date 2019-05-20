@@ -36,6 +36,9 @@ double na_podlozi;
 //i - promenljiva koja odredjuje x koordinatu crtanja poligona
 int i = 0;
 
+// pomeraj loptice (brzina loptice na poligonou.)
+double pomeraj_loptice = 0.02;
+
 //h - promenljiva koja odredjuje visinu na kojoj loptica stoji
 double h = 0;
 
@@ -234,12 +237,12 @@ void floor_move_period(void){
 		if (ball_move_r){
 			glPushMatrix();
 			glMatrixMode(GL_PROJECTION);
-			glTranslatef(-0.02, 0, 0);
+			glTranslatef(-pomeraj_loptice, 0, 0);
 			glPopMatrix();
 
-			//  povecavamo move za 0.02 kako bi loptica ostala 
+			//  povecavamo move za pomeraj_loptice(0.02) kako bi loptica ostala 
 			//  u istoj poziciji
-			move += 0.02;
+			move += pomeraj_loptice;
 		}
 
 		/*
@@ -249,12 +252,12 @@ void floor_move_period(void){
 		 * se ceo poligon ne bi iscrtavao iscrtavaju se samo delovi koji su vidljivi i blizu ivica
 		 * ovo se najlakse moze videti kada postavite trecu koordinatu gluLookAt-a postavite na 5 i odaljite kameru.
 		 */
-		if (((move - (int)move) < 0.02)&&((int)(move+6) % 6 == 0)){ 
+		if (((move - (int)move) < pomeraj_loptice)&&((int)(move+6) % 6 == 0)){ 
 			//i - promenljiva koja odredjuje x koordinatu crtanja poligona
 			i+=6;
 		}
 	}else{
-		br += 0.02;
+		br += pomeraj_loptice;
 	}
 }
 
@@ -310,13 +313,15 @@ void ball_move_r_f(int value){
 
 	animiraj_slobodan_pad();
 
+	printf("%f\n", move);
+
 	if (br <= 0.7) {
 		/*
 		 * dokle god loptica ne dodje u polozaj da kamera treba
 		 * da je prati, izvrsavamo samo pomeranje loptice - ovo je samo na pocetku.
 		 */
-		move += 0.02;
-		br = br + 0.02;
+		move += pomeraj_loptice;
+		br = br +  pomeraj_loptice;
 		if (ball_move_r){
 			glutTimerFunc(20,ball_move_r_f, 1);
 		}
@@ -328,7 +333,7 @@ void ball_move_r_f(int value){
 		 * a loptica stoji u mestu zajedno sa kamerom fiksirana
 		 */
 		floor_move_period();
-		br = br + 0.02;
+		br = br + pomeraj_loptice;
 		if (ball_move_r){
 			glutTimerFunc(20,ball_move_r_f, 1);
 		}
@@ -348,8 +353,8 @@ void ball_move_l_f(int value){
 		 * dokle god loptica ne dodje u polozaj da kamera treba
 		 * da je prati, izvrsavamo samo pomeranje loptice
 		 */
-		move -= 0.02;
-		br = br - 0.02;
+		move -= pomeraj_loptice;
+		br = br - pomeraj_loptice;
 		if (ball_move_l){
 			glutTimerFunc(20,ball_move_l_f, 2);
 		}
@@ -361,8 +366,8 @@ void ball_move_l_f(int value){
 		 * a loptica stoji u mestu zajedno sa kamerom fiksirana
 		 */
 		floor_move_period();
-		br = 0.7 - 0.02;
-		move -= 0.02;
+		br = 0.7 - pomeraj_loptice;
+		move -= pomeraj_loptice;
 		if (ball_move_l){
 			glutTimerFunc(20,ball_move_l_f, 2);
 		}
