@@ -162,6 +162,9 @@ static void on_keyboard(unsigned char key, int x, int y)
 			ball_move_l = true;
 		}
 		break;
+	case 'f':
+		pomeraj_loptice = 0.1;
+		break;
     }
 }
 
@@ -180,6 +183,9 @@ void keyboard_up(unsigned char key, int x, int y){
 		break;
 	case 'j':
 		ball_move_l = false;
+		break;
+	case 'f':
+		pomeraj_loptice = 0.02;
 		break;
 	}
 }
