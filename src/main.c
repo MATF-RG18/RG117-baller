@@ -4,6 +4,7 @@
 #include<stdbool.h>
 #include<stdio.h>
 #include<time.h>
+#include<string.h>
 #include"pomocne.h"
 #include "object.h"
 
@@ -32,6 +33,13 @@ double sirina_prepreke_max = 0.89;
 //i postaje jednaka visini prepreke. Onda i skok sa prepreke se implementira
 //iz te pozicije umesto sa podloge (Ox=0).
 double na_podlozi;
+
+// promenljive za prikazivanje promenljivih
+char tekst_poeni[100];
+double br_poena=0;
+
+//promenljiva koja odredjuje x koordinatu teksta sa poenima
+double pos_score = 1;
 
 //i - promenljiva koja odredjuje x koordinatu crtanja poligona
 int i = 0;
@@ -86,6 +94,9 @@ void provera_iznad_police();
 // funkcija animiraj_slobodan_pad ima opis unutar definicije
 void animiraj_slobodan_pad();
 
+//prikazivanje poena
+void tekst_trenutni_poeni_f(const char* s);
+
 int main(int argc, char **argv)
 {
 	// prvo alociraj nizove koji imaju koordinate za iscrtavanje prepreka.
@@ -128,6 +139,31 @@ int main(int argc, char **argv)
     glutMainLoop();
 
     return 0;
+}
+
+// Funkcija za ispis koliko je trenutno osvojeno poena
+void tekst_trenutni_poeni_f(const char* s) {
+    /*iskljucujemo osvetljenje */
+	glDisable(GL_LIGHTING);
+
+
+	/*boja teksta.*/
+    glEnable(GL_COLOR_MATERIAL);
+	glColor3f(1,0,0);
+
+	glPushMatrix();
+	//postavljamo poziciju teksta
+	//posto hocemo da prati lopticu x-koordinata mora da zavisi od
+	//pozicije loptice.
+	glRasterPos2f(pos_score,0.5);
+	glPopMatrix();
+    int duzina=(int)strlen(s);
+    for(int i=0;i<duzina;++i){
+        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, s[i]);
+    }
+    /*iskljucujemo GL_COLOR_MATERIAL i Ukljucujemo opet svetlo. */
+    glDisable(GL_COLOR_MATERIAL);
+	glEnable(GL_LIGHTING);
 }
 
 static void on_keyboard(unsigned char key, int x, int y)
@@ -333,8 +369,6 @@ void ball_move_r_f(int value){
 
 	animiraj_slobodan_pad();
 
-	printf("%f\n", move);
-
 	if (br <= 0.7) {
 		/*
 		 * dokle god loptica ne dodje u polozaj da kamera treba
@@ -356,9 +390,9 @@ void ball_move_r_f(int value){
 		br = br + pomeraj_loptice;
 		if (ball_move_r){
 			glutTimerFunc(20,ball_move_r_f, 1);
+			pos_score += pomeraj_loptice;
 		}
 	}
-
 }
 
 void ball_move_l_f(int value){
@@ -413,6 +447,7 @@ static void on_reshape(int width, int height)
 
 static void on_display(void)
 {
+
 	/* postavljamo poziciju svetla */
 	GLfloat light_position[] = {0,2,6,0};
 														
@@ -475,6 +510,10 @@ static void on_display(void)
 
 	ball_y_coord = sin((jump*7)*pi / 180)*0.6 + na_podlozi;
 	draw_sphere(&move, ball_y_coord);
+
+	/* Poziv funkcije za ispis poena na ekran */
+	sprintf(tekst_poeni, "Poeni: %.f", br_poena);
+	tekst_trenutni_poeni_f(tekst_poeni);
 
 	/* Nova slika se salje na ekran. */
     glutSwapBuffers();
