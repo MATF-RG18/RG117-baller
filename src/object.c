@@ -43,26 +43,18 @@ void draw_sphere(double* move, double jump){
 	glPopMatrix();
 }
 
-void iscrtaj_prepreke(double poligon_x[], double poligon_y[]){
+void iscrtaj_prepreke(double* poligon_x, double* poligon_y, double* ball_x_coord, double* broj_prepreka, double* koordinata_poslednje_prepreke, int pomeraj){
 
-	for (int i=0; i<10; i++){
+	if (*ball_x_coord + 3 > *koordinata_poslednje_prepreke){
+		for (int i=0; i<*broj_prepreka; ++i){
+			poligon_x[i] += pomeraj - 2 - 3;
+		}
+		*koordinata_poslednje_prepreke += pomeraj - 5;
+	}
+
+	for (int i=0; i<*broj_prepreka; i++){
 		glPushMatrix();
 			glTranslatef(poligon_x[i],  poligon_y[i],0);
-			draw_cube();
-		glPopMatrix();
-
-		glPushMatrix();
-			glTranslatef(poligon_x[i+1],poligon_y[i+1],0);
-			draw_cube();
-		glPopMatrix();
-
-		glPushMatrix();
-			glTranslatef(poligon_x[i+2],poligon_y[i+2],0);
-			draw_cube();
-		glPopMatrix();
-
-		glPushMatrix();
-			glTranslatef(poligon_x[i+3],poligon_y[i+3],0);
 			draw_cube();
 		glPopMatrix();
 	}

@@ -46,9 +46,20 @@ double h = 0;
 double ball_y_coord = 0;
 
 // niz x i y koordinata za poligon
-// TODO - trenutno sluze samo za primer, odradice se elegantnije
-double poligon_x[200] = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-double poligon_y[200] = {0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1};
+double broj_prepreka = 20;
+double koordinata_poslednje_prepreke = 22;
+int pomeraj = 10;
+double *poligon_x, *poligon_y;
+
+void alociraj_nizove(){
+	poligon_x = (double*)malloc(broj_prepreka*sizeof(double));
+	poligon_y = (double*)malloc(broj_prepreka*sizeof(double));
+
+	for (int i=0; i<broj_prepreka; i++){
+		poligon_x[i] = i+2;
+		poligon_y[i] = 0.1;
+	}
+}
 
 // promenljive za poziciju lopte pri skoku
 int degree = 180;
@@ -77,6 +88,9 @@ void animiraj_slobodan_pad();
 
 int main(int argc, char **argv)
 {
+	// prvo alociraj nizove koji imaju koordinate za iscrtavanje prepreka.
+	alociraj_nizove();
+
     /* Inicijalizuje se GLUT. */
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
@@ -449,7 +463,7 @@ static void on_display(void)
 			  0.7,0.3,0,
 			  0,1,0);
 
-	iscrtaj_prepreke(poligon_x, poligon_y);
+	iscrtaj_prepreke(poligon_x, poligon_y, &move, &broj_prepreka, &koordinata_poslednje_prepreke, broj_prepreka);
 	draw_floor_1(&i);
 	draw_floor_2(&i);
 
