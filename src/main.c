@@ -171,7 +171,7 @@ void tekst_trenutni_poeni_f(const char* s) {
 	//postavljamo poziciju teksta
 	//posto hocemo da prati lopticu x-koordinata mora da zavisi od
 	//pozicije loptice.
-	glRasterPos2f(pos_score,0.5);
+	glRasterPos2f(pos_score,0.8);
 	glPopMatrix();
     int duzina=(int)strlen(s);
     for(int i=0;i<duzina;++i){
@@ -196,7 +196,7 @@ void tekst_maks_poeni_f(const char* s) {
 	//postavljamo poziciju teksta
 	//posto hocemo da prati lopticu x-koordinata mora da zavisi od
 	//pozicije loptice.
-	glRasterPos2f(pos_score,0.3);
+	glRasterPos2f(pos_score,0.7);
 	glPopMatrix();
     int duzina=(int)strlen(s);
     for(int i=0;i<duzina;++i){
