@@ -44,6 +44,12 @@ double pos_score = 1;
 //i - promenljiva koja odredjuje x koordinatu crtanja poligona
 int i = 0;
 
+// pocetna_pozicija promenljiva koja pomaze pri brojanju poena
+double pocetna_pozicija = 0;
+
+//promenljiva koja odredjuje kada pocinju ispocetka da se broje poeni
+bool brojanje_pocinje = false;
+
 // pomeraj loptice (brzina loptice na poligonou.)
 double pomeraj_loptice = 0.02;
 
@@ -241,6 +247,9 @@ void provera_iznad_police(){
 			na_podlozi = 0.17;
 			jump = 0;
 			ball_jump=false;
+			if (!brojanje_pocinje){
+				brojanje_pocinje = true;
+			}
 		}
 	}else{
 		if (!jump_from_hight)
@@ -273,7 +282,18 @@ void ball_jump_f(int value){
 	}
 	else {
 		jump = start_jump_pos;
-		if (jump_from_hight && !pozicija(move)) na_podlozi = 0; 
+
+		if (brojanje_pocinje){
+			br_poena += 1;
+		}
+
+		// deo koda koji se izvrsava kada loptica skoci sa police na podlogu
+		// tada se poeni resetuju
+		if (jump_from_hight && !pozicija(move)) {
+			na_podlozi = 0;
+			brojanje_pocinje = false;
+			br_poena = 0;
+		}
 		ball_jump = false;
 		jump_from_hight = false;
 	}
@@ -331,7 +351,6 @@ void free_fall_f(int value){
 	}else{
 		ball_free_fall = false;
 		ball_y_coord = start_jump_pos;
-		na_podlozi = 0;
 		jump = 0;
 	}
 }
@@ -355,6 +374,8 @@ void animiraj_slobodan_pad(){
 			 * dodjemo do ivice kada treba da se implementira slobodan pad loptice sa police
 			 */
 			na_podlozi = 0;
+			brojanje_pocinje = false;
+			br_poena = 0;
 			jump = 23.6;
 			glutTimerFunc(30, free_fall_f, 55);
 			ball_free_fall = true;
