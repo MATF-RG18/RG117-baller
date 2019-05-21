@@ -7,11 +7,20 @@
 #include<string.h>
 #include"pomocne.h"
 #include "object.h"
+#include "image.h"
 
+// funkcija za inicijalizaciju teksture
+static void initialize();
+
+GLuint names;
+//funkcija za iscrtavanje pozadine
+void texture_pozadina(GLuint names);
 
 #define pi 3.141592653589793
 double jump = 0;
 double move = 0;
+
+#define POZADINA "pozadina3.bmp"
 
 bool ball_jump= false;
 bool ball_move_r= false;
@@ -145,6 +154,9 @@ int main(int argc, char **argv)
 	ball_move_r = false;
 	ball_move_l = false;
 
+	/* inicijalizacija teksture*/
+	initialize();
+
     /* Obavlja se OpenGL inicijalizacija. */
     glClearColor(0.75, 0.75, 0.75, 0);
 
@@ -215,6 +227,7 @@ static void on_keyboard(unsigned char key, int x, int y)
     case 27:
 	case 'q':
         /* Zavrsava se program. */
+		glDeleteTextures(2, &names);
         exit(0);
         break;
 	case 32:
@@ -499,6 +512,55 @@ void ball_move_l_f(int value){
 		}
 	}
 }
+static void initialize(void){
+	/*Prekopirano sa casa*/
+    /* Objekat koji predstavlja teskturu ucitanu iz fajla. */
+    Image * image;
+
+    /* Postavlja se boja pozadine. */
+    glClearColor(0, 0, 0, 0);
+
+    /* Ukljucuje se testiranje z-koordinate piksela. */
+    glEnable(GL_DEPTH_TEST);
+
+    /* Ukljucuju se teksture. */
+    glEnable(GL_TEXTURE_2D);
+
+    glTexEnvf(GL_TEXTURE_ENV,
+              GL_TEXTURE_ENV_MODE,
+              GL_REPLACE);
+
+    /*
+     * Inicijalizuje se objekat koji ce sadrzati teksture ucitane iz
+     * fajla.
+     */
+    image = image_init(move, 0);
+
+    /* Kreira se tekstura. */
+    image_read(image, POZADINA);
+
+    /* Generisu se identifikatori tekstura. */
+    glGenTextures(1, &names);
+
+    glBindTexture(GL_TEXTURE_2D, names);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+                 image->width, image->height, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+
+    /* Iskljucujemo aktivnu teksturu */
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    /* Unistava se objekat za citanje tekstura iz fajla. */
+    image_done(image);
+}
 
 static void on_reshape(int width, int height)
 {
@@ -515,6 +577,58 @@ static void on_reshape(int width, int height)
     gluLookAt(0.7,0.3,1.22,
 			  0.7,0.3,0,
 			  0,1,0);
+}
+
+void texture_pozadina(GLuint names){
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);     
+	glBindTexture(GL_TEXTURE_2D, names);                  
+
+	//funkcija koja iscrtava pozadinu
+	glPushMatrix();
+	//prvo ide dva iscrtavanja prva dva dela pozadine(teksture) posebno
+	//posto ostale zavise od koordinata polica pa ce se automatski ponovo 
+	//iscrtavati sa promenom istih koordinata
+	glBegin(GL_QUADS);
+		glNormal3f(0, 1,0);
+		glTexCoord2f(0, 0);
+		glVertex3f(-2, -0.5, -0.2);
+		glTexCoord2f(0, 1);
+		glVertex3f(-2, 1.5, -0.2);
+		glTexCoord2f(1, 1);
+		glVertex3f(0, 1.5, -0.2);
+		glTexCoord2f(1, 0);
+		glVertex3f(0, -0.5, -0.2);
+	glEnd();
+	glBegin(GL_QUADS);
+		glNormal3f(0, 1,0);
+		glTexCoord2f(0, 0);
+		glVertex3f(0, -0.5, -0.2);
+		glTexCoord2f(0, 1);
+		glVertex3f(0, 1.5, -0.2);
+		glTexCoord2f(1, 1);
+		glVertex3f(2, 1.5, -0.2);
+		glTexCoord2f(1, 0);
+		glVertex3f(2, -0.5, -0.2);
+	glEnd();
+
+	for (int i=0; i<broj_prepreka; ++i){
+		glBegin(GL_QUADS);
+			glNormal3f(0, 1,0);
+			glTexCoord2f(0, 0);
+			glVertex3f(poligon_x[i], -0.5, -0.2);
+			glTexCoord2f(0, 1);
+			glVertex3f(poligon_x[i], 1.5, -0.2);
+			glTexCoord2f(1, 1);
+			glVertex3f(poligon_x[i] + 2, 1.5, -0.2);
+			glTexCoord2f(1, 0);
+			glVertex3f(poligon_x[i] + 2, -0.5, -0.2);
+		glEnd();
+	}
+	
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	glPopMatrix();
+	
 }
 
 static void on_display(void)
@@ -575,6 +689,11 @@ static void on_display(void)
     gluLookAt(0.7,0.3,1.3,
 			  0.7,0.3,0,
 			  0,1,0);
+
+	// postavljanje teksture
+	glPushMatrix();
+		texture_pozadina(names);
+	glPopMatrix();
 
 	iscrtaj_prepreke(poligon_x, poligon_y, &move, &broj_prepreka, &koordinata_poslednje_prepreke, broj_prepreka);
 	draw_floor_1(&i);
