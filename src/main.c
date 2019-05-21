@@ -37,6 +37,7 @@ double na_podlozi;
 // promenljive za prikazivanje promenljivih
 char tekst_poeni[100];
 double br_poena=0;
+double maks_poena = 0;
 
 //promenljiva koja odredjuje x koordinatu teksta sa poenima
 double pos_score = 1;
@@ -100,8 +101,9 @@ void provera_iznad_police();
 // funkcija animiraj_slobodan_pad ima opis unutar definicije
 void animiraj_slobodan_pad();
 
-//prikazivanje poena
+//prikazivanje poena i najboljeg rezultata
 void tekst_trenutni_poeni_f(const char* s);
+void tekst_maks_poeni_f(const char* s);
 
 int main(int argc, char **argv)
 {
@@ -162,6 +164,31 @@ void tekst_trenutni_poeni_f(const char* s) {
 	//posto hocemo da prati lopticu x-koordinata mora da zavisi od
 	//pozicije loptice.
 	glRasterPos2f(pos_score,0.5);
+	glPopMatrix();
+    int duzina=(int)strlen(s);
+    for(int i=0;i<duzina;++i){
+        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, s[i]);
+    }
+    /*iskljucujemo GL_COLOR_MATERIAL i Ukljucujemo opet svetlo. */
+    glDisable(GL_COLOR_MATERIAL);
+	glEnable(GL_LIGHTING);
+}
+
+// Funkcija za ispis koliko je maksimalno osvojeno poena
+void tekst_maks_poeni_f(const char* s) {
+    /*iskljucujemo osvetljenje */
+	glDisable(GL_LIGHTING);
+
+
+	/*boja teksta.*/
+    glEnable(GL_COLOR_MATERIAL);
+	glColor3f(1,0,0);
+
+	glPushMatrix();
+	//postavljamo poziciju teksta
+	//posto hocemo da prati lopticu x-koordinata mora da zavisi od
+	//pozicije loptice.
+	glRasterPos2f(pos_score,0.3);
 	glPopMatrix();
     int duzina=(int)strlen(s);
     for(int i=0;i<duzina;++i){
@@ -292,6 +319,7 @@ void ball_jump_f(int value){
 		if (jump_from_hight && !pozicija(move)) {
 			na_podlozi = 0;
 			brojanje_pocinje = false;
+			if (br_poena > maks_poena) maks_poena = br_poena-1;
 			br_poena = 0;
 		}
 		ball_jump = false;
@@ -375,6 +403,7 @@ void animiraj_slobodan_pad(){
 			 */
 			na_podlozi = 0;
 			brojanje_pocinje = false;
+			if (br_poena > maks_poena) maks_poena = br_poena;
 			br_poena = 0;
 			jump = 23.6;
 			glutTimerFunc(30, free_fall_f, 55);
@@ -535,6 +564,10 @@ static void on_display(void)
 	/* Poziv funkcije za ispis poena na ekran */
 	sprintf(tekst_poeni, "Poeni: %.f", br_poena);
 	tekst_trenutni_poeni_f(tekst_poeni);
+
+	/* Poziv funkcije za ispis maksimalnog broja osvojenih poena do sada*/
+	sprintf(tekst_poeni, "High score: %.f", maks_poena);
+	tekst_maks_poeni_f(tekst_poeni);
 
 	/* Nova slika se salje na ekran. */
     glutSwapBuffers();
