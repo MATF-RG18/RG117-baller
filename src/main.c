@@ -57,6 +57,10 @@ double pomeraj_loptice = 0.02;
 //h - promenljiva koja odredjuje visinu na kojoj loptica stoji
 double h = 0;
 
+// promenljiva koja odredjuje da li smo prvi put skocili na policu(detaljniji opis u
+// funkciji 'animiraj_slobodan_pad')
+bool prvi_skok = true;
+
 // y koordinata loptice koja sluzi za simulaciju skoka
 double ball_y_coord = 0;
 
@@ -272,6 +276,8 @@ void provera_iznad_police(){
 			// (kada jump predje 24 onda 7*jump prelazi 180 stepeni pa se animacija sama po
 			// sebi prekida.
 			na_podlozi = 0.17;
+			//promenljiva koja ce da se aktivirati tek kada loptica prvi put skoci na policu
+			//Njom cemo da implementiramo to da se prvi skok na policu ne racuna kao dodatan poen
 			jump = 0;
 			ball_jump=false;
 			if (!brojanje_pocinje){
@@ -311,7 +317,11 @@ void ball_jump_f(int value){
 		jump = start_jump_pos;
 
 		if (brojanje_pocinje){
-			br_poena += 1;
+			if (!prvi_skok) {
+				br_poena += 1;
+			}else{
+				prvi_skok = false;
+			}
 		}
 
 		// deo koda koji se izvrsava kada loptica skoci sa police na podlogu
@@ -320,6 +330,7 @@ void ball_jump_f(int value){
 			na_podlozi = 0;
 			brojanje_pocinje = false;
 			if (br_poena > maks_poena) maks_poena = br_poena-1;
+			prvi_skok = true;
 			br_poena = 0;
 		}
 		ball_jump = false;
@@ -389,7 +400,7 @@ void animiraj_slobodan_pad(){
 	if (pozicija(move)){
  		if (jump <= 24 && jump > 23){
 			/*
-			 * u ovaj deo if-a se ulazi kada se loptica pomera udesno i pri skoku se 
+			 * u ovaj deo if-a se ulazi kada se loptica pomera udesno i pri skoku (u padu) se
 			 * nadje tik iznad police, tada visinu iscrtavanja lopte uvecavamo kako bi
 			 * simulirali da je loptica na polici.
 			 */
@@ -404,6 +415,7 @@ void animiraj_slobodan_pad(){
 			na_podlozi = 0;
 			brojanje_pocinje = false;
 			if (br_poena > maks_poena) maks_poena = br_poena;
+			prvi_skok = true;
 			br_poena = 0;
 			jump = 23.6;
 			glutTimerFunc(30, free_fall_f, 55);
