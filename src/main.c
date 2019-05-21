@@ -39,6 +39,10 @@ char tekst_poeni[100];
 double br_poena=0;
 double maks_poena = 0;
 
+//promenljiva koja ce pamtiti poziciju sa koje je lopta skocila sa police kako bi izracunali da li je sletela
+//na istu policu ili je skocila na policu ispred(ili eventualno preskocila i skocila na drugu po redu)
+int pozicija_sa_koje_skace_loptica = 0;
+
 //promenljiva koja odredjuje x koordinatu teksta sa poenima
 double pos_score = 1;
 
@@ -283,6 +287,8 @@ void provera_iznad_police(){
 			if (!brojanje_pocinje){
 				brojanje_pocinje = true;
 			}
+			//pozicija sa koje loptica skace se pamti
+			if (prvi_skok) pozicija_sa_koje_skace_loptica = (int)(move + 0.15);
 		}
 	}else{
 		if (!jump_from_hight)
@@ -316,9 +322,13 @@ void ball_jump_f(int value){
 	else {
 		jump = start_jump_pos;
 
+		// ne zelimo da uvecavamo broj poena kada prvi put skocimo na policu
 		if (brojanje_pocinje){
 			if (!prvi_skok) {
-				br_poena += 1;
+				if ((int)(move + 0.15) > pozicija_sa_koje_skace_loptica){
+					br_poena +=(int)(move + 0.15) - pozicija_sa_koje_skace_loptica;
+					pozicija_sa_koje_skace_loptica = (int)(move+0.15);
+				}
 			}else{
 				prvi_skok = false;
 			}
