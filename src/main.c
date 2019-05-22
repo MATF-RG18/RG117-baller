@@ -177,7 +177,7 @@ void tekst_trenutni_poeni_f(const char* s) {
 
 	/*boja teksta.*/
     glEnable(GL_COLOR_MATERIAL);
-	glColor3f(1,0,0);
+	glColor3f(1,1,1);
 
 	glPushMatrix();
 	//postavljamo poziciju teksta
@@ -202,7 +202,7 @@ void tekst_maks_poeni_f(const char* s) {
 
 	/*boja teksta.*/
     glEnable(GL_COLOR_MATERIAL);
-	glColor3f(1,0,0);
+	glColor3f(1,1,1);
 
 	glPushMatrix();
 	//postavljamo poziciju teksta
